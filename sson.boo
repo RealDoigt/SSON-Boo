@@ -10,7 +10,7 @@ static class SSON:
 	objects = Dictionary[of string, Dictionary[of string, string]]();
 	defaultValues = Dictionary[of string, Dictionary[of string, string]]();
 	
-	readingObject, readingDefault = false, false
+	readingDefault = false
 	currentObject = ""
 	lineCount = 0
 	
@@ -59,17 +59,47 @@ static class SSON:
 				
 			if str.StartsWith("default"):
 				
-				readingObject, readingDefault = true, true
+				readingDefault = true
 				
 				# removes the default out of the string.
 				currentObject = str[7:].Trim();
-			
+				
+			elif str.StartsWith("alias"):
+				
+				defaultValueToCopy = ""
+				
+				for k in defaultValues.Keys:
+					
+					if str.EndsWith(k):
+						
+						defaultValueToCopy = k
+						break
+						
+				if defaultValueToCopy.Length == 0:
+					
+					print "couldn't match $str with an extant default object at line $lineCount."
+					return false
+				
+				readingDefault = true
+				
+				# removes the alias out of the string.
+				currentObject = str[5:str.Length-defaultValueToCopy.Length].Trim();
+				
+				if not defaultValues.ContainsKey(currentObject):
+					defaultValues.Add(currentObject, Dictionary[of string, string]())
+				
+				for val in defaultValues[defaultValueToCopy]:
+					
+					if not defaultValues[currentObject].ContainsKey(val.Key):
+						defaultValues[currentObject].Add(val.Key, val.Value)
+						
+					else:
+						defaultValues[currentObject][val.Key] = val.Value
 			else:
 				
 				cleanStr = str.Trim()
 				
 				currentObject = "$(cleanStr)_$lineCount"
-				readingObject = true
 				
 				if defaultValues.ContainsKey(cleanStr):
 					
